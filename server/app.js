@@ -74,49 +74,6 @@ app.post('/links',
     });
 });
 
-app.post('/signup',
-(req, res, next) => {
-  console.log('app post signup req', req); 
-  // console.log('app post signup req.body', req.body);
-  var username = req.body.username;
-  var password = req.body.password;
-  var url = req.body.url;
-  // if the user is already in database 
-    // redirect to signup
-  return models.Users.create({
-    username: username,
-    password: password
-  })
-  .then(result => {
-    res.status(200).send(result);
-  })
-  .error(error => {
-    res.status(500).send(error);
-  });   
-});
-
-// /**
-//    * Creates a new user record with the given username and password.
-//    * This method creates a salt and hashes the password before storing
-//    * the username, hashed password, and salt in the database.
-//    * @param {string} username - The user's username.
-//    * @param {string} password - The plaintext password.
-//    * @returns {Promise<Object>} A promise that is fulfilled with the result of
-//    * the record creation or rejected with the error that occured.
-//    */
-//   create({ username, password }) {
-//     let salt = utils.createRandom32String();
-
-//     let newUser = {
-//       username,
-//       salt,
-//       password: utils.createHash(password, salt)
-//     };
-
-//     return super.create.call(this, newUser);
-//   }
-// }
-
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
@@ -152,5 +109,52 @@ app.get('/:code', (req, res, next) => {
       res.redirect('/');
     });
 });
+
+app.post('/signup',
+(req, res, next) => {
+  // console.log('app post signup req', req); 
+  // console.log('app post signup req.body', req.body);
+  var username = req.body.username;
+  var password = req.body.password;
+    // redirect to signup
+  // console.log("models.get: ", models.Users.get({'username': username}));
+  
+  return models.Users.get({'username': username})
+    .then(user => {
+    // if the user is already in database 
+      if (user) {
+        throw user;
+      } else {
+        return models.Users.create({
+          username: username,
+          password: password
+        });
+      }
+    })
+    .then(result => {
+      res.redirect('/');
+    })
+    .error(error => {
+      res.status(500).send(error);
+    })   
+    .catch(user => {
+      res.redirect('/signup');
+    });
+});
+
+ /**
+   * Gets one record in the table matching the specified conditions.
+   * @param {Object} options - An object where the keys are column names and the
+   * values are the current values to be matched.
+   * @returns {Promise<Object>} A promise that is fulfilled with one object
+   * containing the object matching the conditions or is rejected with the the
+   * error that occurred during the query. Note that even if multiple objects match
+   * the conditions provided, only one will be provided upon fulfillment.
+   */
+  // get(options) {
+  //   let parsedOptions = parseData(options);
+  //   let queryString = `SELECT * FROM ${this.tablename} WHERE ${parsedOptions.string.join(' AND ')} LIMIT 1`;
+  //   return executeQuery(queryString, parsedOptions.values).then(results => results[0]);
+  // }
 
 module.exports = app;
