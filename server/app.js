@@ -74,6 +74,49 @@ app.post('/links',
     });
 });
 
+app.post('/signup',
+(req, res, next) => {
+  console.log('app post signup req', req); 
+  // console.log('app post signup req.body', req.body);
+  var username = req.body.username;
+  var password = req.body.password;
+  var url = req.body.url;
+  // if the user is already in database 
+    // redirect to signup
+  return models.Users.create({
+    username: username,
+    password: password
+  })
+  .then(result => {
+    res.status(200).send(result);
+  })
+  .error(error => {
+    res.status(500).send(error);
+  });   
+});
+
+// /**
+//    * Creates a new user record with the given username and password.
+//    * This method creates a salt and hashes the password before storing
+//    * the username, hashed password, and salt in the database.
+//    * @param {string} username - The user's username.
+//    * @param {string} password - The plaintext password.
+//    * @returns {Promise<Object>} A promise that is fulfilled with the result of
+//    * the record creation or rejected with the error that occured.
+//    */
+//   create({ username, password }) {
+//     let salt = utils.createRandom32String();
+
+//     let newUser = {
+//       username,
+//       salt,
+//       password: utils.createHash(password, salt)
+//     };
+
+//     return super.create.call(this, newUser);
+//   }
+// }
+
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
