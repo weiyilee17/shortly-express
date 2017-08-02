@@ -5,6 +5,7 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
+const cookieParser = require ('./middleware/cookieParser');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
+//app.use(cookieParser);
 
 
 app.get('/', 
@@ -142,6 +144,39 @@ app.post('/signup',
     });
 });
 
+app.post('/login', (req, res, next) => {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  return models.Users.get({'username': username})
+    .then(user => { 
+      console.log('user:', user);
+      // username:
+      // pwd
+      // salt
+      if (user['username'] !== username) { // if username doesn't match
+        throw user; //redirect to signup 
+      } else {  // if username matches
+        // check pwd (which behind the scenes creates hashed version of password and pass it in as attempted)
+        // compare(attempted, password, salt) {
+        //   return utils.compareHash(attempted, password, salt);
+        // }
+        if (!models.Users.compare(password, user.password, user.salt)) {  // if pwd is not correct
+          throw user;
+        } 
+      }
+      // return models.Sessions.update()
+    })
+    .then(result => {
+      res.redirect('/');
+    })
+    .error(error => {
+      res.status(500).send(error);
+    })   
+    .catch(user => {
+      res.redirect('/login');
+    });
+});
  /**
    * Gets one record in the table matching the specified conditions.
    * @param {Object} options - An object where the keys are column names and the
